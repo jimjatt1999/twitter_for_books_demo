@@ -106,12 +106,3 @@ The application uses:
 
 [Your chosen license]
 ```
-
-This README is:
-- More focused on getting started quickly
-- Includes the port 5000 issue you encountered
-- Shows the actual file structure you're working with
-- Removes unnecessary complexity
-- Focuses on practical usage
-
-You can further customize it based on your specific needs or add more sections as the project evolves.
