@@ -1,0 +1,5 @@
+flask
+sentence-transformers
+ebooklib
+beautifulsoup4
+numpy

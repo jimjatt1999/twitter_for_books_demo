@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html data-theme="light">
+<head>
+    <title>BookFeed</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <!-- Main Container -->
+    <div class="container">
+        <header class="app-header">
+            <div class="header-main">
+                <h1>BookFeed</h1>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="header-controls">
+                <div class="upload-section">
+                    <input type="file" id="fileUpload" accept=".epub" multiple>
+                    <button class="upload-btn" onclick="uploadFile()">Upload</button>
+                </div>
+
+                <button class="saved-quotes-btn" onclick="toggleSavedQuotes()">
+                    Saved Quotes
+                    <span class="saved-count">0</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Book Filters -->
+        <div class="book-filters">
+            <button class="book-filter active" onclick="filterBook('all')">All Books</button>
+            {% for book in books %}
+            <div class="book-filter-container">
+                <button class="book-filter" onclick="filterBook('{{ book }}')">{{ book }}</button>
+                <button class="remove-book" onclick="removeBook('{{ book }}')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Feed -->
+        <div id="feed"></div>
+        
+        <!-- Load More -->
+        <button id="loadMoreBtn" class="load-more-btn" style="display: none;">
+            Load More
+        </button>
+
+        <!-- Generate Feed Button -->
+        <button onclick="generateNewFeed()" id="generateFeedBtn" class="generate-btn">
+            <span>Generate Feed</span>
+            <div class="loading-spinner"></div>
+        </button>
+    </div>
+
+    <!-- Saved Quotes Panel (Outside container) -->
+    <div class="saved-quotes-panel" id="savedQuotesPanel">
+        <div class="panel-header">
+            <h3>Saved Quotes</h3>
+            <button class="close-panel" onclick="toggleSavedQuotes()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div id="savedQuotesList">
+            <!-- Saved quotes will appear here -->
+        </div>
+    </div>
+
+    <!-- Comment Modal -->
+    <div class="modal" id="commentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Discussion</h3>
+                <button onclick="closeCommentModal()" class="close-modal">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="quote-context">
+                <div class="book-tag"></div>
+                <p class="quote-text"></p>
+            </div>
+            <div class="comments-container"></div>
+            <div class="comment-input-container">
+                <div class="typing-indicator" style="display: none;">
+                    <span>AI is thinking</span>
+                    <span class="dots">...</span>
+                </div>
+                <div class="comment-input">
+                    <textarea 
+                        placeholder="Start a discussion about this quote..." 
+                        rows="3"
+                        onkeydown="handleCommentKeydown(event, this)"></textarea>
+                    <button onclick="submitComment(this)">
+                        <span class="button-text">Send</span>
+                        <div class="button-loader"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates -->
+    <template id="feedItemTemplate">
+        <div class="feed-item">
+            <div class="feed-item-header">
+                <span class="book-tag"></span>
+            </div>
+            <p class="tweet-text"></p>
+            <div class="actions">
+                <button class="action-button source-btn" onclick="toggleSource(this)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 3v18M3 12h18"/>
+                    </svg>
+                    <span>Source</span>
+                </button>
+                <button class="action-button save-btn" onclick="saveQuote(this)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <span>Save</span>
+                </button>
+                <button class="action-button share-btn" onclick="shareQuote(this)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/>
+                    </svg>
+                    <span>Share</span>
+                </button>
+                <button class="action-button comment-btn" onclick="openComments(this)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <span>Comments</span>
+                </button>
+            </div>
+            <div class="source-text">
+                <div class="source-content"></div>
+                <div class="source-info">
+                    <span class="chapter-info"></span>
+                    <span class="position-info"></span>
+                </div>
+            </div>
+            <div class="comment-count">
+                <span class="count">0</span> comments
+            </div>
+        </div>
+    </template>
+
+    <template id="commentTemplate">
+        <div class="comment">
+            <div class="comment-header">
+                <div class="comment-avatar"></div>
+                <div class="comment-meta">
+                    <span class="comment-author"></span>
+                    <span class="comment-time"></span>
+                </div>
+            </div>
+            <div class="comment-body"></div>
+        </div>
+    </template>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
