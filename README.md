@@ -102,7 +102,3 @@ The application uses:
 - Vanilla JavaScript for frontend
 - CSS3 with variables for theming
 
-## License
-
-[Your chosen license]
-```
